@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="ko" id="html-root">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WMS Citeureup Reviewer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f2ee;--surface:#fff;--surface2:#ede9e3;--border:#e0dbd2;
+  --text:#1a1814;--text2:#5a5550;--text3:#9a948d;
+  --accent:#2d6a4f;--accent-l:#e6f4ec;
+  --red:#b83232;--red-l:#fdeaea;
+  --orange:#c45c1a;--orange-l:#fdf0e6;
+  --yellow:#a07818;--yellow-l:#fdf6e3;
+  --frozen:#2563eb;--frozen-bg:#eff6ff;
+  --chilled:#0891b2;--chilled-bg:#ecfeff;
+  --dry:#78716c;--dry-bg:#f5f4f0;
+  --font:'Noto Sans KR',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;}
+.topbar{background:var(--text);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
+.tlogo{display:flex;align-items:center;gap:10px;}
+.tlogo-ico{font-size:22px;}
+.tlogo-name{font-size:15px;font-weight:700;color:#fff;}
+.tlogo-sub{font-size:9px;color:#6a6560;font-family:var(--mono);letter-spacing:1px;}
+.topright{display:flex;align-items:center;gap:12px;}
+.ro-badge{background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;}
+.updated{font-size:10px;color:#6a6560;font-family:var(--mono);}
+.lang-btn{background:rgba(255,255,255,.12);border:none;color:#ccc;font-family:var(--font);font-size:11px;padding:5px 10px;border-radius:6px;cursor:pointer;}
+.lang-btn:hover{background:rgba(255,255,255,.2);}
+
+.layout{display:flex;min-height:calc(100vh - 50px);}
+/* Dashboard sidebar */
+.dash-sidebar{width:260px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:12px;}
+.main-area{flex:1;padding:16px;overflow:auto;}
+
+/* Stats */
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--c,var(--accent));}
+.stat-lbl{font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.8px;}
+.stat-val{font-size:28px;font-weight:800;font-family:var(--mono);color:var(--c,var(--accent));margin:4px 0 2px;}
+.stat-desc{font-size:10px;color:var(--text2);}
+.stats2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+/* Type bars */
+.section-t{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;display:flex;align-items:center;gap:5px;}
+.section-t::before{content:'';width:3px;height:10px;background:var(--accent);border-radius:2px;display:inline-block;}
+.type-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.type-row:last-child{margin-bottom:0;}
+.type-bar-bg{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.type-bar{height:100%;border-radius:3px;transition:width .5s;}
+
+/* Alert list */
+.alert-item{border-radius:8px;padding:9px 11px;margin-bottom:5px;border:1px solid;display:flex;align-items:center;justify-content:space-between;}
+.alert-item.d0{background:var(--red-l);border-color:rgba(184,50,50,.2);}
+.alert-item.d30{background:var(--orange-l);border-color:rgba(196,92,26,.2);}
+.alert-item.d90{background:var(--surface);border-color:var(--border);}
+.alert-name{font-size:12px;font-weight:700;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.alert-meta{font-size:9px;color:var(--text3);}
+.dday-pill{font-size:10px;font-weight:700;font-family:var(--mono);padding:2px 7px;border-radius:10px;white-space:nowrap;}
+.dday-pill.d0{background:var(--red);color:#fff;}
+.dday-pill.d30{background:var(--orange);color:#fff;}
+.dday-pill.d90{background:var(--surface2);color:var(--text2);}
+.alert-qty{font-size:11px;font-weight:700;font-family:var(--mono);color:var(--text);margin-top:2px;}
+
+/* Tabs */
+.tabs{display:flex;gap:3px;margin-bottom:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px;}
+.tab{padding:7px 16px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);border:none;background:transparent;transition:all .15s;font-family:var(--font);}
+.tab.active{background:var(--text);color:#fff;}
+
+/* Card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;}
+.card-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:13px;font-weight:700;}
+.card-sub{font-size:10px;color:var(--text3);}
+.search{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:var(--font);font-size:12px;color:var(--text);outline:none;width:200px;}
+.search:focus{border-color:var(--accent);}
+.fsel{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 8px;font-family:var(--font);font-size:12px;color:var(--text2);outline:none;}
+
+/* Table */
+table{width:100%;border-collapse:collapse;table-layout:fixed;}
+th{padding:9px 8px;font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap;}
+td{padding:8px 8px;border-bottom:1px solid var(--surface2);font-size:12px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+td.left{text-align:left;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--bg);}
+.num{text-align:center;font-family:var(--mono);}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;}
+.b-frozen{background:var(--frozen-bg);color:var(--frozen);}
+.b-chilled{background:var(--chilled-bg);color:var(--chilled);}
+.b-dry{background:var(--dry-bg);color:var(--dry);}
+.b-in{background:var(--accent-l);color:var(--accent);}
+.b-out{background:var(--orange-l);color:var(--orange);}
+.exp-warn{color:var(--orange);font-weight:700;}
+.exp-danger{color:var(--red);font-weight:700;}
+.exp-90{color:var(--yellow);}
+
+/* Panel */
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* Today section */
+.today-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.today-row:last-child{border-bottom:none;padding-bottom:0;}
+.today-badge{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;}
+.t-in{background:var(--accent-l);color:var(--accent);}
+.t-out{background:var(--orange-l);color:var(--orange);}
+
+.empty{text-align:center;padding:30px;color:var(--text3);}
+.empty-ico{font-size:28px;margin-bottom:6px;opacity:.4;}
+.loading{text-align:center;padding:60px;color:var(--text3);}
+.loader{display:inline-block;width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-box{background:var(--red-l);border:1px solid #f0b4b4;border-radius:10px;padding:14px;color:var(--red);margin-bottom:14px;font-size:13px;}
+.no-alert{background:var(--accent-l);border:1px solid rgba(45,106,79,.2);border-radius:8px;padding:11px;display:flex;align-items:center;gap:7px;color:var(--accent);font-size:12px;font-weight:600;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tlogo">
+    <div class="tlogo-ico" id="v-logo">🥡</div>
+    <div>
+      <div class="tlogo-name" id="v-company-name">식품 WMS</div>
+      <div class="tlogo-sub" id="v-title-sub" id="v-title-sub">재고 현황 뷰어</div>
+    </div>
+  </div>
+  <div class="topright">
+    <button class="lang-btn" id="lang-btn" onclick="toggleLang()">🌐 한국어</button>
+    <button class="lang-btn" onclick="openViewerSettings()" title="연결 설정">⚙️ 설정</button>
+    <button id="v-refresh-btn" class="lang-btn" onclick="loadData()" title="새로고침">⟳ 새로고침</button>
+    <span class="updated" id="last-updated">—</span>
+    <span class="ro-badge" id="v-readonly">👁 읽기 전용</span>
+  </div>
+</div>
+
+<!-- Viewer Settings Modal -->
+<div id="m-vsettings" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:14px;padding:24px;width:420px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div style="font-size:15px;font-weight:700;color:#1a1814">☁️ <span data-vl="settings">연결 설정</span></div>
+      <button onclick="closeViewerSettings()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#888">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:#666;display:block;margin-bottom:5px" data-vl="gas_url">Apps Script 웹앱 URL <span style="color:#e53935">*</span></label>
+        <input id="vs-url" type="text" placeholder="https://script.google.com/macros/s/..." 
+          style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:8px;padding:9px 12px;font-size:12px;font-family:monospace;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:#666;display:block;margin-bottom:5px" data-vl="secret_key">비밀키</label>
+        <input id="vs-key" type="text" placeholder="WMS2025!" 
+          style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:8px;padding:9px 12px;font-size:12px;outline:none">
+      </div>
+      <div id="vs-test-result" style="font-size:12px;min-height:18px"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end">
+      <button onclick="testViewerConn()" style="background:#f5f0eb;border:none;border-radius:8px;padding:9px 16px;font-size:12px;cursor:pointer;font-weight:600" data-vl="connect_test">🔍 연결 테스트</button>
+      <button onclick="closeViewerSettings()" style="background:#f5f0eb;border:none;border-radius:8px;padding:9px 16px;font-size:12px;cursor:pointer" data-vl="cancel">취소</button>
+      <button onclick="saveViewerSettings()" style="background:#1a1814;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;cursor:pointer;font-weight:600" data-vl="save_refresh">저장 후 새로고침</button>
+    </div>
+  </div>
+</div>
+
+<div id="loading" class="loading">
+  <div><div class="loader"></div><div style="font-size:13px">불러오는 중...</div></div>
+</div>
+<div id="error-box" class="error-box" style="display:none"></div>
+
+<div class="layout" id="main-layout" style="display:none">
+  <!-- Left dashboard sidebar -->
+  <div class="dash-sidebar">
+    <div>
+      <div class="section-t" id="v-total-stock-lbl" id="v-total-stock-lbl">총 재고</div>
+      <div style="font-size:36px;font-weight:900;font-family:var(--mono);color:var(--accent)" id="v-total">0</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px" id="v-summary">—</div>
+    </div>
+    <div class="stats2">
+      <div class="stat-card" style="--c:#2563eb">
+        <div class="stat-lbl" id="v-items-lbl">품목</div>
+        <div class="stat-val" id="v-items">0</div>
+        <div class="stat-desc" id="v-items-desc" id="v-items-desc">아이템</div>
+      </div>
+      <div class="stat-card" style="--c:var(--red)">
+        <div class="stat-lbl" id="v-exp-lbl">유통기한</div>
+        <div class="stat-val" id="v-exp">0</div>
+        <div class="stat-desc" id="v-exp-desc" id="v-exp-desc">90일 이내</div>
+      </div>
+    </div>
+
+    <!-- Type breakdown -->
+    <div>
+      <div class="section-t" id="v-type-ratio-lbl" id="v-type-ratio-lbl">타입별 재고</div>
+      <div class="type-row">
+        <span style="width:20px">❄️</span>
+        <div class="type-bar-bg"><div class="type-bar" id="bar-frozen" style="background:#2563eb;width:0%"></div></div>
+        <span style="font-size:11px;font-family:var(--mono);color:var(--text2);min-width:52px;text-align:right" id="v-frozen-qty">0</span>
+      </div>
+      <div class="type-row">
+        <span style="width:20px">🧊</span>
+        <div class="type-bar-bg"><div class="type-bar" id="bar-chilled" style="background:#0891b2;width:0%"></div></div>
+        <span style="font-size:11px;font-family:var(--mono);color:var(--text2);min-width:52px;text-align:right" id="v-chilled-qty">0</span>
+      </div>
+      <div class="type-row">
+        <span style="width:20px">📦</span>
+        <div class="type-bar-bg"><div class="type-bar" id="bar-dry" style="background:#78716c;width:0%"></div></div>
+        <span style="font-size:11px;font-family:var(--mono);color:var(--text2);min-width:52px;text-align:right" id="v-dry-qty">0</span>
+      </div>
+    </div>
+
+    <!-- Today activity -->
+    <div>
+      <div class="section-t" id="v-today-lbl" id="v-today-lbl">오늘 입출고</div>
+      <div class="today-row">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="today-badge t-in">↓</div>
+          <div>
+            <div style="font-size:10px;color:var(--text3)" id="v-today-in-lbl">입고</div>
+            <div style="font-size:11px;font-weight:600;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="v-today-in-name">—</div>
+          </div>
+        </div>
+        <div style="font-size:20px;font-weight:800;font-family:var(--mono);color:var(--accent)" id="v-today-in-val">0<span style="font-size:10px;color:var(--text3);font-weight:400"> ctn</span></div>
+      </div>
+      <div class="today-row">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="today-badge t-out">↑</div>
+          <div>
+            <div style="font-size:10px;color:var(--text3)" id="v-today-out-lbl">출고</div>
+            <div style="font-size:11px;font-weight:600;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="v-today-out-name">—</div>
+          </div>
+        </div>
+        <div style="font-size:20px;font-weight:800;font-family:var(--mono);color:var(--orange)" id="v-today-out-val">0<span style="font-size:10px;color:var(--text3);font-weight:400"> ctn</span></div>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+      <div class="section-t" id="v-alerts-lbl">유통기한 주의</div>
+      <div style="overflow-y:auto;flex:1" id="v-alert-list">
+        <div class="no-alert" id="v-no-alerts">✅ 없음</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main tabs area -->
+  <div class="main-area">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('inventory',this)" id="tab-btn-inventory" id="tab-btn-inventory">📦 재고 현황</button>
+      <button class="tab" onclick="showTab('inbound',this)" id="tab-btn-inbound" id="tab-btn-inbound">↓ 입고</button>
+      <button class="tab" onclick="showTab('outbound',this)" id="tab-btn-outbound" id="tab-btn-outbound">↑ 출고</button>
+      <button class="tab" onclick="showTab('expiry',this)" id="tab-btn-expiry" id="tab-btn-expiry">⚠️ 유통기한</button>
+    </div>
+
+    <!-- Inventory -->
+    <div class="panel active" id="panel-inventory">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title" id="v-inv-title">재고 현황</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button onclick="exportInventoryExcel()" id="btn-inv-excel"
+              style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:4px">
+              📊 <span data-vl="export_excel">엑셀 다운로드</span>
+            </button>
+            <input class="search" id="inv-q" placeholder="🔍 검색..." oninput="renderInventory()">
+            <select class="fsel" id="inv-tf" onchange="renderInventory()">
+              <option value="" id="opt-all">전체</option>
+              <option value="냉동" id="opt-frozen">❄️ 냉동</option>
+              <option value="냉장" id="opt-chilled">🧊 냉장</option>
+              <option value="드라이" id="opt-dry">📦 드라이</option>
+            </select>
+          </div>
+        </div>
+        <!-- 재고있음/없음 탭 -->
+        <div style="display:flex;gap:3px;margin-bottom:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:3px;width:fit-content">
+          <button id="v-inv-tab-active" onclick="switchViewerInvTab('active',this)"
+            style="background:var(--text);color:#fff;font-size:12px;padding:5px 14px;border-radius:6px;border:none;cursor:pointer">
+            📦 재고 있음 <span id="v-inv-cnt-active" style="font-size:10px;opacity:.7"></span>
+          </button>
+          <button id="v-inv-tab-zero" onclick="switchViewerInvTab('zero',this)"
+            style="background:transparent;color:var(--text2);font-size:12px;padding:5px 14px;border-radius:6px;border:none;cursor:pointer">
+            ⭕ 재고 없음 <span id="v-inv-cnt-zero" style="font-size:10px;opacity:.7"></span>
+          </button>
+        </div>
+        <table>
+          <colgroup>
+            <col style="width:110px"><col style="width:80px"><col style="width:180px"><col style="width:60px"><col style="width:55px"><col style="width:110px"><col style="width:80px">
+          </colgroup>
+          <thead><tr>
+            <th id="th-barcode">바코드</th><th id="th-brand">브랜드</th>
+            <th id="th-name" style="text-align:left">제품명</th>
+            <th id="th-type">타입</th><th id="th-unit">입수량</th>
+            <th id="th-expiry">유통기한</th><th id="th-qty">재고(ctn)</th>
+          </tr></thead>
+          <tbody id="inv-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Inbound -->
+    <div class="panel" id="panel-inbound">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title" id="v-ib-title">입고 이력</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="search" id="ib-q" placeholder="🔍 서플라이어 검색..." oninput="renderInbound()" style="width:160px">
+            <select class="fsel" id="ib-type-f" onchange="renderInbound()">
+              <option value="">전체</option>
+              <option value="import">🌐 수입</option>
+              <option value="local">🏠 로컬</option>
+            </select>
+            <input type="date" id="ib-date-from" onchange="renderInbound()" class="fsel" style="font-size:11px">
+            <span style="font-size:11px;color:var(--text3)">~</span>
+            <input type="date" id="ib-date-to" onchange="renderInbound()" class="fsel" style="font-size:11px">
+          </div>
+        </div>
+        <table>
+          <thead><tr>
+            <th id="th-ib-no">입고번호</th><th id="th-ib-date">일자</th>
+            <th id="th-ib-sup">서플라이어</th><th>구분</th><th id="th-ib-items">품목수</th><th id="th-ib-qty">총수량(ctn)</th><th></th>
+          </tr></thead>
+          <tbody id="ib-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Outbound -->
+    <div class="panel" id="panel-outbound">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title" id="v-ob-title">출고 이력</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="search" id="ob-q" placeholder="🔍 커스터머 검색..." oninput="renderOutbound()" style="width:160px">
+            <input type="date" id="ob-date-from" onchange="renderOutbound()" class="fsel" style="font-size:11px">
+            <span style="font-size:11px;color:var(--text3)">~</span>
+            <input type="date" id="ob-date-to" onchange="renderOutbound()" class="fsel" style="font-size:11px">
+          </div>
+        </div>
+        <table>
+          <thead><tr>
+            <th id="th-ob-no">출고번호</th><th id="th-ob-date">일자</th>
+            <th id="th-ob-cus">커스터머</th><th id="th-ob-items">품목수</th><th id="th-ob-qty">총수량(ctn)</th><th></th>
+          </tr></thead>
+          <tbody id="ob-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Expiry -->
+    <div class="panel" id="panel-expiry">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title" id="v-exp-title" id="v-exp-title">유통기한 주의 재고</div>
+          <button onclick="exportExpiryExcel()" style="background:var(--orange);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:4px">
+            📊 <span data-vl="export_excel">엑셀 다운로드</span>
+          </button>
+        </div>
+        <table>
+          <colgroup>
+            <col style="width:110px"><col style="width:80px"><col style="width:180px"><col style="width:60px"><col style="width:110px"><col style="width:70px"><col style="width:80px">
+          </colgroup>
+          <thead><tr>
+            <th id="th-exp-barcode">바코드</th><th id="th-exp-brand">브랜드</th>
+            <th id="th-exp-name" style="text-align:left">제품명</th>
+            <th id="th-exp-type">타입</th><th id="th-exp-expiry">유통기한</th>
+            <th>D-day</th><th id="th-exp-qty">재고(ctn)</th>
+          </tr></thead>
+          <tbody id="exp-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// GAS URL: localStorage에서 읽음 (⚙️ 설정 버튼으로 변경 가능)
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbyGQ3hb7B9uIDWiyrJawcpI5w8qErb0NyJ77xSbjvi9zhywmqLTnDw1KOwMDG7JHeK2/exec';
+var GAS_KEY = 'WMS2025!';
+(function(){
+  try{
+    const s = localStorage.getItem('fwms2_viewer_cfg');
+    if(s){ const p=JSON.parse(s); GAS_URL=p.url||''; GAS_KEY=p.key||'WMS2025!'; }
+  }catch(e){}
+})();
+
+var DB = null;
+// 날짜 표시: YYYY-MM-DD → DD-MM-YYYY
+const fD=d=>{ if(!d||d.length<10) return d||'—'; return d.slice(8,10)+'-'+d.slice(5,7)+'-'+d.slice(0,4); };
+
+var LANG = 'ko';
+var LANG_PACK = {
+  ko:{
+    dashboard:'대시보드', inventory:'재고 현황', inbound:'입고 이력', outbound:'출고 이력',
+    expiry:'유통기한 주의', total_stock:'총 재고', items_count:'품목 수', expiry_warn:'유통기한',
+    type_ratio:'타입별 재고', today_activity:'오늘 입출고', expiry_alerts:'유통기한 주의',
+    frozen:'냉동', chilled:'냉장', dry:'드라이', stock_in:'입고', stock_out:'출고',
+    expired:'만료', no_alerts:'임박 재고 없음', loading:'불러오는 중...',
+    readonly:'읽기 전용', stock_viewer:'재고 현황 뷰어',
+    expiry_90:'90일 이내', expiry_30:'30일 이내', brand:'브랜드', product_name:'제품명',
+    barcode:'바코드', type:'타입', unit:'입수량', qty:'재고(ctn)', date:'일자', no:'번호',
+    supplier:'서플라이어', customer:'커스터머', items_unit:'품목수',
+    today_in:'입고', today_out:'출고',
+    all_type:'전체', settings:'설정', cancel:'취소', save_refresh:'저장 후 새로고침',
+    gas_url:'Apps Script URL', secret_key:'비밀키', connect_test:'연결 테스트',
+    stock_with:'재고 있음', stock_zero:'재고 없음', no_data:'데이터 없음',
+    d30_within:'30일 이내', d90_within:'31~90일',
+    total_qty:'총수량(ctn)', supplier_col:'서플라이어', customer_col:'커스터머',
+    export_excel:'엑셀 다운로드',
+    sup_import:'🌐 수입', sup_local:'🏠 로컬',
+  },
+  id:{
+    dashboard:'Dasbor', inventory:'Stok Barang', inbound:'Riwayat Masuk', outbound:'Riwayat Keluar',
+    expiry:'Peringatan Kadaluarsa', total_stock:'Total Stok', items_count:'Jumlah Item', expiry_warn:'Kadaluarsa',
+    type_ratio:'Stok per Tipe', today_activity:'Aktivitas Hari Ini', expiry_alerts:'Peringatan Kadaluarsa',
+    frozen:'Beku', chilled:'Dingin', dry:'Kering', stock_in:'Masuk', stock_out:'Keluar',
+    expired:'Kadaluarsa', no_alerts:'Tidak ada stok hampir kadaluarsa', loading:'Memuat...',
+    readonly:'Hanya Baca', stock_viewer:'Tampilan Stok',
+    expiry_90:'dalam 90 hari', expiry_30:'dalam 30 hari', brand:'Merek', product_name:'Nama Produk',
+    barcode:'Barcode', type:'Tipe', unit:'Isi/Ktn', qty:'Stok(ktn)', date:'Tanggal', no:'Nomor',
+    supplier:'Pemasok', customer:'Pelanggan', items_unit:'item',
+    today_in:'Masuk', today_out:'Keluar',
+    all_type:'Semua', settings:'Pengaturan', cancel:'Batal', save_refresh:'Simpan & Muat Ulang',
+    gas_url:'URL Web App', secret_key:'Kunci Rahasia', connect_test:'Tes Koneksi',
+    stock_with:'Ada Stok', stock_zero:'Stok Habis', no_data:'Tidak ada data',
+    d30_within:'dalam 30 hari', d90_within:'31~90 hari',
+    total_qty:'Total(ktn)', supplier_col:'Pemasok', customer_col:'Pelanggan',
+    export_excel:'Unduh Excel',
+    sup_import:'🌐 Impor', sup_local:'🏠 Lokal',
+  }
+};
+function L(k){ return (LANG_PACK[LANG]||LANG_PACK.ko)[k]||(LANG_PACK.ko)[k]||k; }
+
+
+// ── 뷰어 설정 ─────────────────────────────────────
+function openViewerSettings(){
+  document.getElementById('vs-url').value = GAS_URL||'';
+  document.getElementById('vs-key').value = GAS_KEY||'WMS2025!';
+  document.getElementById('vs-test-result').textContent = '';
+  const m=document.getElementById('m-vsettings');
+  m.style.display='flex';
+}
+function closeViewerSettings(){
+  document.getElementById('m-vsettings').style.display='none';
+}
+function saveViewerSettings(){
+  const url=document.getElementById('vs-url').value.trim();
+  const key=document.getElementById('vs-key').value.trim()||'WMS2025!';
+  if(!url){ document.getElementById('vs-test-result').textContent='❌ URL을 입력하세요'; return; }
+  GAS_URL=url; GAS_KEY=key;
+  try{ localStorage.setItem('fwms2_viewer_cfg',JSON.stringify({url,key})); }catch(e){}
+  closeViewerSettings();
+  loadData();
+}
+async function testViewerConn(){
+  const url=document.getElementById('vs-url').value.trim();
+  const res=document.getElementById('vs-test-result');
+  if(!url){ res.textContent='❌ URL을 입력하세요'; res.style.color='#e53935'; return; }
+  res.textContent='⟳ 연결 테스트 중...'; res.style.color='#888';
+  try{
+    const j=await gasFetch(url+'?action=ping');
+    if(j.ok){ res.textContent='✅ 연결 성공!'; res.style.color='#4ade80'; }
+    else{ res.textContent='❌ 서버 오류: '+j.error; res.style.color='#e53935'; }
+  }catch(e){ res.textContent='❌ '+e.message; res.style.color='#e53935'; }
+}
+
+function toggleLang(){
+  LANG = LANG==='ko'?'id':'ko';
+  try{ localStorage.setItem('fwms2_viewer_lang',LANG); }catch(e){}
+  document.getElementById('html-root').lang = LANG==='id'?'id':'ko';
+  applyLang();
+  if(DB) renderAll();
+}
+function applyLang(){
+  // 헬퍼: null 안전 텍스트 세팅
+  const T=(id,txt)=>{ const el=document.getElementById(id); if(el) el.textContent=txt; };
+  const Q=(sel,txt)=>{ const el=document.querySelector(sel); if(el) el.textContent=txt; };
+
+  // data-vl 속성 일괄 번역
+  document.querySelectorAll('[data-vl]').forEach(el=>{ el.textContent=L(el.getAttribute('data-vl')); });
+
+  // 헤더/버튼
+  T('lang-btn','🌐 '+(LANG==='ko'?'한국어':'Indonesia'));
+  T('v-title-sub',L('stock_viewer'));
+  T('v-readonly','👁 '+L('readonly'));
+  const refreshBtn=document.getElementById('v-refresh-btn');
+  if(refreshBtn) refreshBtn.textContent='⟳ '+(LANG==='ko'?'새로고침':'Muat Ulang');
+  const settingsBtn=document.getElementById('v-settings-btn');
+  if(settingsBtn) settingsBtn.textContent='⚙️ '+(LANG==='ko'?'설정':'Pengaturan');
+
+  // 사이드바 라벨
+  T('v-total-stock-lbl',L('total_stock'));
+  T('v-items-lbl',L('items_count'));
+  T('v-items-desc',L('items_unit'));
+  T('v-exp-lbl',L('expiry_warn'));
+  T('v-exp-desc',L('expiry_90'));
+  T('v-type-ratio-lbl',L('type_ratio'));
+  T('v-today-lbl',L('today_activity'));
+  T('v-today-in-lbl',L('today_in'));
+  T('v-today-out-lbl',L('today_out'));
+  T('v-alerts-lbl',L('expiry_alerts'));
+
+  // 메인 탭 버튼
+  T('tab-btn-inventory','📦 '+L('inventory'));
+  T('tab-btn-inbound','↓ '+L('inbound'));
+  T('tab-btn-outbound','↑ '+L('outbound'));
+  T('tab-btn-expiry','⚠️ '+L('expiry'));
+
+  // 섹션 제목
+  T('v-inv-title',L('inventory'));
+  T('v-inv-section-title',L('inventory'));
+  T('v-ib-title',L('inbound'));
+  T('v-ob-title',L('outbound'));
+  T('v-exp-title',L('expiry_alerts'));
+
+  // 재고있음/없음 탭 (span 카운트 보존)
+  const tabA=document.getElementById('v-inv-tab-active');
+  const tabZ=document.getElementById('v-inv-tab-zero');
+  if(tabA){ const sp=tabA.querySelector('span'); tabA.innerHTML='📦 '+L('stock_with')+' '+(sp?sp.outerHTML:''); }
+  if(tabZ){ const sp=tabZ.querySelector('span'); tabZ.innerHTML='⭕ '+L('stock_zero')+' '+(sp?sp.outerHTML:''); }
+
+  // 테이블 헤더
+  const hmap={
+    'th-barcode':'barcode','th-brand':'brand','th-name':'product_name','th-type':'type',
+    'th-unit':'unit','th-expiry':'expiry','th-qty':'qty',
+    'th-ib-no':'no','th-ib-date':'date','th-ib-sup':'supplier_col',
+    'th-ib-items':'items_unit','th-ib-qty':'total_qty',
+    'th-ob-no':'no','th-ob-date':'date','th-ob-cus':'customer_col',
+    'th-ob-items':'items_unit','th-ob-qty':'total_qty',
+    'th-exp-barcode':'barcode','th-exp-name':'product_name','th-exp-brand':'brand',
+    'th-exp-type':'type','th-exp-expiry':'expiry','th-exp-qty':'qty',
+  };
+  Object.entries(hmap).forEach(([id,k])=>T(id,L(k)));
+
+  // 필터 옵션
+  T('opt-all',L('all_type'));
+  T('opt-frozen','❄️ '+L('frozen'));
+  T('opt-chilled','🧊 '+L('chilled'));
+  T('opt-dry','📦 '+L('dry'));
+
+  // 수입/로컬 필터 옵션 갱신
+  const ibTypeF=document.getElementById('ib-type-f');
+  if(ibTypeF&&ibTypeF.options.length>=3){
+    ibTypeF.options[1].text=L('sup_import');
+    ibTypeF.options[2].text=L('sup_local');
+  }
+
+  // 설정 모달
+  Q('.settings-title','☁️ '+(LANG==='ko'?'연결 설정':'Pengaturan Koneksi'));
+}
+
+function showTab(name,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  el.classList.add('active');
+}
+
+async function gasFetch(url){
+  try{
+    const res=await fetch(url,{method:'GET',redirect:'follow'});
+    const text=await res.text();
+    return JSON.parse(text.trim().replace(/^[^(]*\(/,'').replace(/\);?\s*$/,''));
+  }catch(e){
+    return new Promise((resolve,reject)=>{
+      const cb='_wms_'+Date.now();
+      const sc=document.createElement('script');
+      const tm=setTimeout(()=>{cleanup();reject(new Error('연결 시간 초과'));},12000);
+      function cleanup(){clearTimeout(tm);delete window[cb];sc.parentNode&&sc.parentNode.removeChild(sc);}
+      window[cb]=d=>{cleanup();resolve(d);};
+      sc.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
+      sc.onerror=()=>{cleanup();reject(new Error('로드 실패'));};
+      document.head.appendChild(sc);
+    });
+  }
+}
+
+async function loadData(){
+  // 매 호출 시 상태 초기화
+  document.getElementById('error-box').style.display='none';
+  const refreshBtn=document.getElementById('v-refresh-btn');
+  if(refreshBtn){ refreshBtn.textContent='⟳ ...'; refreshBtn.disabled=true; }
+
+  if(!GAS_URL){
+    document.getElementById('loading').style.display='none';
+    const eb=document.getElementById('error-box');
+    eb.style.display='block';
+    eb.innerHTML='⚙️ <strong>Apps Script URL이 설정되지 않았습니다.</strong><br><br>'
+      +'상단 <strong>⚙️ 설정</strong> 버튼을 클릭해서 연결 URL을 입력하세요.';
+    if(refreshBtn){ refreshBtn.textContent='⟳ '+(LANG==='ko'?'새로고침':'Muat Ulang'); refreshBtn.disabled=false; }
+    return;
+  }
+  try{
+    const json=await gasFetch(GAS_URL+'?action=read&key='+encodeURIComponent(GAS_KEY));
+    if(!json.ok) throw new Error(json.error||'서버 오류');
+    if(!json.data && !json.db) throw new Error('데이터 없음 — WMS에서 동기화 먼저');
+    const raw = json.data || json.db;
+    DB = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    // Apply company info
+    if(DB.companyInfo){
+      const co=DB.companyInfo;
+      const lm=document.getElementById('v-logo');
+      if(lm) lm.innerHTML=co.logoType==='image'&&co.logoImg?`<img src="${co.logoImg}" style="width:26px;height:26px;object-fit:contain">`:co.logo||'🥡';
+      const cn=document.getElementById('v-company-name');
+      if(cn) cn.textContent=co.name||'식품 WMS';
+    }
+    document.getElementById('loading').style.display='none';
+    document.getElementById('main-layout').style.display='flex';
+    const n=new Date();
+    document.getElementById('last-updated').textContent=
+      (n.getMonth()+1)+'/'+(n.getDate())+' '+String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+' 기준';
+    renderAll();
+  }catch(e){
+    document.getElementById('loading').style.display='none';
+    const eb=document.getElementById('error-box');
+    eb.style.display='block'; eb.innerHTML='❌ '+e.message;
+  }finally{
+    if(refreshBtn){ refreshBtn.textContent='⟳ '+(LANG==='ko'?'새로고침':'Muat Ulang'); refreshBtn.disabled=false; }
+  }
+}
+
+const TODAY=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const tico=t=>t==='냉동'?'❄️':t==='냉장'?'🧊':'📦';
+const tbadge=t=>t==='냉동'?'b-frozen':t==='냉장'?'b-chilled':'b-dry';
+const tname=t=>t==='냉동'?L('frozen'):t==='냉장'?L('chilled'):L('dry');
+
+function calcStock(){
+  const s={};
+  // ── adj를 itemId+expiry 기준 최신 1개만 수집 ──
+  const adjMap={};
+  (DB.adj||[]).forEach(a=>{
+    const key=a.itemId+'|'+a.expiry;
+    if(!adjMap[key]||a.updatedAt>adjMap[key].updatedAt) adjMap[key]=a;
+  });
+  // oldExpiry가 다른 경우(유통기한 변경) 구 키 제거
+  Object.values(adjMap).forEach(a=>{
+    if(a.oldExpiry&&a.oldExpiry!==a.expiry){
+      const oldKey=a.itemId+'|'+a.oldExpiry;
+      delete adjMap[oldKey];
+    }
+  });
+  // ── adj가 있는 품목+유통기한: adj 확정값 기준으로 계산 ──
+  Object.values(adjMap).forEach(a=>{
+    if(!s[a.itemId])s[a.itemId]={};
+    let delta=0;
+    (DB.slips_in||[]).forEach(slip=>slip.lines.forEach(l=>{
+      if(l.itemId!==a.itemId||l.expiry!==a.expiry) return;
+      const slipTs=slip.createdAt||slip.date+'T23:59:59.999Z';
+      if(slipTs>a.updatedAt) delta+=Number(l.qty);
+    }));
+    (DB.slips_out||[]).forEach(slip=>slip.lines.forEach(l=>{
+      if(l.itemId!==a.itemId||l.expiry!==a.expiry) return;
+      const slipTs=slip.createdAt||slip.date+'T23:59:59.999Z';
+      if(slipTs>a.updatedAt) delta-=Number(l.qty);
+    }));
+    s[a.itemId][a.expiry]=Number(a.qty)+delta;
+  });
+  // ── adj 없는 품목+유통기한: 입출고 전표로만 계산 ──
+  (DB.slips_in||[]).forEach(slip=>slip.lines.forEach(l=>{
+    const key=l.itemId+'|'+l.expiry;
+    if(adjMap[key]) return;
+    if(!s[l.itemId])s[l.itemId]={};
+    s[l.itemId][l.expiry]=(s[l.itemId][l.expiry]||0)+Number(l.qty);
+  }));
+  (DB.slips_out||[]).forEach(slip=>slip.lines.forEach(l=>{
+    const key=l.itemId+'|'+l.expiry;
+    if(adjMap[key]) return;
+    if(!s[l.itemId])s[l.itemId]={};
+    s[l.itemId][l.expiry]=(s[l.itemId][l.expiry]||0)-Number(l.qty);
+  }));
+  return s;
+}
+
+function renderAll(){ renderDashboard(); renderInventory(); renderInbound(); renderOutbound(); renderExpiry(); }
+
+function renderDashboard(){
+  const stock=calcStock(),today=TODAY();
+  let total=0,frozen=0,chilled=0,dry=0,exp90=0,exp30=0,expired=0;
+  (DB.items||[]).filter(i=>i.active!==false).forEach(i=>{
+    Object.entries(stock[i.id]||{}).forEach(([e,q])=>{
+      if(q<=0)return; total+=q;
+      if(i.type==='냉동')frozen+=q; else if(i.type==='냉장')chilled+=q; else dry+=q;
+      const dl=Math.ceil((new Date(e)-new Date(today))/86400000);
+      if(dl<=0)expired++; else if(dl<=30)exp30++; else if(dl<=90)exp90++;
+    });
+  });
+  document.getElementById('v-total').textContent=total.toLocaleString();
+  document.getElementById('v-items').textContent=(DB.items||[]).length;
+  document.getElementById('v-exp').textContent=expired+exp30+exp90;
+  document.getElementById('v-summary').textContent=`${L('items_count')} ${(DB.items||[]).length}개 · ${L('expired')} ${expired}건 · D-30 ${exp30}건`;
+
+  const mx=Math.max(frozen,chilled,dry,1);
+  document.getElementById('bar-frozen').style.width=(frozen/mx*100)+'%';
+  document.getElementById('bar-chilled').style.width=(chilled/mx*100)+'%';
+  document.getElementById('bar-dry').style.width=(dry/mx*100)+'%';
+  document.getElementById('v-frozen-qty').textContent=frozen.toLocaleString()+' ctn';
+  document.getElementById('v-chilled-qty').textContent=chilled.toLocaleString()+' ctn';
+  document.getElementById('v-dry-qty').textContent=dry.toLocaleString()+' ctn';
+
+  const todayIn=(DB.slips_in||[]).filter(s=>s.date===today);
+  const todayOut=(DB.slips_out||[]).filter(s=>s.date===today);
+  const inQty=todayIn.reduce((a,s)=>a+s.lines.reduce((b,l)=>b+l.qty,0),0);
+  const outQty=todayOut.reduce((a,s)=>a+s.lines.reduce((b,l)=>b+l.qty,0),0);
+  document.getElementById('v-today-in-val').innerHTML=inQty.toLocaleString()+'<span style="font-size:10px;color:var(--text3);font-weight:400"> ctn</span>';
+  document.getElementById('v-today-out-val').innerHTML=outQty.toLocaleString()+'<span style="font-size:10px;color:var(--text3);font-weight:400"> ctn</span>';
+  if(todayIn.length){
+    const names=[...new Set(todayIn.map(s=>(DB.suppliers||[]).find(x=>x.id===s.supplierId)?.name||'—'))];
+    document.getElementById('v-today-in-name').textContent=names.slice(0,2).join(', ')+(names.length>2?' 외 '+(names.length-2):'');
+  } else document.getElementById('v-today-in-name').textContent='—';
+  if(todayOut.length){
+    const names=[...new Set(todayOut.map(s=>(DB.customers||[]).find(x=>x.id===s.customerId)?.name||'—'))];
+    document.getElementById('v-today-out-name').textContent=names.slice(0,2).join(', ')+(names.length>2?' 외 '+(names.length-2):'');
+  } else document.getElementById('v-today-out-name').textContent='—';
+
+  // Alerts D-90
+  const d90=new Date();d90.setDate(d90.getDate()+90);
+  let alerts=[];
+  (DB.items||[]).filter(i=>i.active!==false).forEach(i=>{
+    Object.entries(stock[i.id]||{}).filter(([e,q])=>q>0&&new Date(e)<=d90).forEach(([e,q])=>{
+      const dl=Math.ceil((new Date(e)-new Date(today))/86400000);
+      alerts.push({item:i,expiry:e,qty:q,dl});
+    });
+  });
+  const al=document.getElementById('v-alert-list');
+  if(!alerts.length){ al.innerHTML=`<div class="no-alert">✅ ${L('no_alerts')}</div>`; return; }
+
+  // 30일 이내 / 31~90일 분리
+  const urgent = alerts.filter(a=>a.dl<=30);
+  const warn90 = alerts.filter(a=>a.dl>30 && a.dl<=90);
+
+  const makeItem = a=>{
+    const cls=a.dl<=0?'d0':a.dl<=30?'d30':'d90';
+    const pill=a.dl<=0?L('expired'):'D-'+a.dl;
+    const nm=a.item.name.length>14?a.item.name.slice(0,13)+'…':a.item.name;
+    return `<div class="alert-item ${cls}">
+      <div><div class="alert-name">${nm}</div><div class="alert-meta">${a.item.brand} · ${fD(a.expiry)}</div></div>
+      <div style="text-align:right"><span class="dday-pill ${cls}">${pill}</span><div class="alert-qty">${a.qty} ctn</div></div>
+    </div>`;
+  };
+
+  let html='';
+  if(urgent.length){
+    html+=`<div style="font-size:10px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.6px;padding:6px 2px 3px">⚠️ ${L('d30_within')} (${urgent.length})</div>`;
+    html+=urgent.slice(0,15).map(makeItem).join('');
+  }
+  if(warn90.length){
+    html+=`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;padding:8px 2px 3px">📅 ${L('d90_within')} (${warn90.length})</div>`;
+    html+=warn90.slice(0,10).map(makeItem).join('');
+  }
+  al.innerHTML=html;
+}
+
+function renderInventory(){
+  const q=(document.getElementById('inv-q')?.value||'').toLowerCase();
+  const tf=document.getElementById('inv-tf')?.value||'';
+  const stock=calcStock(),today=TODAY();
+  const allItems=(DB.items||[]).filter(i=>i.active!==false&&(!q||(i.name+i.brand+(i.barcode||'')).toLowerCase().includes(q))&&(!tf||i.type===tf));
+  const tb=document.getElementById('inv-table');
+
+  // 재고있음/없음 분류
+  const withStock=[], noStock=[];
+  allItems.forEach(i=>{
+    const total=Object.values(stock[i.id]||{}).reduce((s,q)=>s+(q>0?q:0),0);
+    if(total>0) withStock.push(i); else noStock.push(i);
+  });
+  const ca=document.getElementById('v-inv-cnt-active');
+  const cz=document.getElementById('v-inv-cnt-zero');
+  if(ca) ca.textContent='('+withStock.length+')';
+  if(cz) cz.textContent='('+noStock.length+')';
+
+  const VIEWER_INV_TAB = window._viewerInvTab||'active';
+  const items = VIEWER_INV_TAB==='zero' ? noStock : withStock;
+
+  if(!items.length){
+    tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-ico">${VIEWER_INV_TAB==='zero'?'✅':'📦'}</div>${VIEWER_INV_TAB==='zero'?L('no_alerts'):L('stock_zero')}</div></td></tr>`;
+    return;
+  }
+
+  // 재고 없음 탭
+  if(VIEWER_INV_TAB==='zero'){
+    tb.innerHTML=items.map(i=>`<tr>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text3)">${i.barcode||'—'}</td>
+      <td style="font-size:11px;color:var(--text2)">${i.brand}</td>
+      <td class="left" style="font-weight:600">${i.name}</td>
+      <td><span class="badge ${tbadge(i.type)}">${tico(i.type)} ${tname(i.type)}</span></td>
+      <td style="font-size:11px">${i.inner}</td>
+      <td style="color:var(--text3)">—</td>
+      <td style="color:var(--text3)">0</td>
+    </tr>`).join('');
+    return;
+  }
+
+  // 재고 있음 탭 - 유통기한별 rowspan
+  let rows=[];
+  items.forEach(item=>{
+    const is=stock[item.id]||{};
+    const exps=Object.entries(is).filter(([,q])=>q>0).sort(([a],[b])=>a.localeCompare(b));
+    if(!exps.length) return;
+    exps.forEach(([e,q],i)=>rows.push({item,expiry:e,qty:q,first:i===0,span:exps.length}));
+  });
+  tb.innerHTML=rows.map(r=>{
+    const dl=Math.ceil((new Date(r.expiry)-new Date(today))/86400000);
+    const expCls=dl<=0?'exp-danger':dl<=30?'exp-warn':dl<=90?'exp-90':'';
+    const note=dl<=0?` <small>[${L('expired')}]</small>`:dl<=90?` <small>[D-${dl}]</small>`:'';
+    const firstCells=r.first?`
+      <td rowspan="${r.span}" style="font-family:var(--mono);font-size:10px;color:var(--text3)">${r.item.barcode||'—'}</td>
+      <td rowspan="${r.span}" style="font-size:11px;color:var(--text2)">${r.item.brand}</td>
+      <td rowspan="${r.span}" class="left" style="font-weight:600">${r.item.name}</td>
+      <td rowspan="${r.span}"><span class="badge ${tbadge(r.item.type)}">${tico(r.item.type)} ${tname(r.item.type)}</span></td>
+      <td rowspan="${r.span}" style="font-size:11px">${r.item.inner}</td>`:'';
+    return `<tr>
+      ${firstCells}
+      <td class="num ${expCls}" style="font-size:11px">${r.expiry}${note}</td>
+      <td class="num" style="font-weight:700">${r.qty>0?r.qty.toLocaleString():'—'}</td>
+    </tr>`;
+  }).join('')||`<tr><td colspan="7"><div class="empty"><div class="empty-ico">📦</div>${L('no_alerts')}</div></td></tr>`;
+}
+
+function exportInventoryExcel(){
+  if(!DB){ alert(L('no_data')); return; }
+  const stock = calcStock();
+  const today = TODAY();
+  const rows = [];
+
+  const hBrand    = L('brand');
+  const hName     = L('product_name');
+  const hType     = L('type');
+  const hUnit     = L('unit')+'/ctn';
+  const hExpiry   = L('expiry');
+  const hQty      = L('qty');
+
+  (DB.items||[]).forEach(item=>{
+    const exps = Object.entries(stock[item.id]||{})
+      .filter(([,q])=>q>0)
+      .sort(([a],[b])=>a.localeCompare(b));
+    if(!exps.length) return; // 재고 0 항목 제외
+    exps.forEach(([e,q])=>{
+      const dl = Math.ceil((new Date(e)-new Date(today))/86400000);
+      const dday = dl<=0 ? L('expired') : 'D-'+dl;
+      rows.push({
+        [hBrand]: item.brand,
+        [hName]: item.name,
+        'Barcode': item.barcode||'',
+        [hType]: tname(item.type),
+        [hUnit]: item.inner,
+        [hExpiry]: e,
+        'D-Day': dday,
+        [hQty]: q
+      });
+    });
+  });
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [
+    {wch:14},{wch:28},{wch:16},{wch:10},{wch:8},{wch:14},{wch:8},{wch:10}
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
+  XLSX.writeFile(wb, 'Inventory_'+today+'.xlsx');
+}
+
+
+function exportExpiryExcel(){
+  if(!DB){ alert(L('no_data')); return; }
+  const stock=calcStock(), today=TODAY();
+  const d90=new Date(); d90.setDate(d90.getDate()+90);
+  const rows=[];
+  (DB.items||[]).filter(i=>i.active!==false).forEach(i=>{
+    Object.entries(stock[i.id]||{}).filter(([e,q])=>q>0&&new Date(e)<=d90).forEach(([e,q])=>{
+      const dl=Math.ceil((new Date(e)-new Date(today))/86400000);
+      rows.push({
+        'Barcode': i.barcode||'',
+        [L('brand')]: i.brand,
+        [L('product_name')]: i.name,
+        [L('type')]: tname(i.type),
+        [L('expiry')]: e,
+        'D-Day': dl<=0?L('expired'):'D-'+dl,
+        [L('qty')]: q
+      });
+    });
+  });
+  rows.sort((a,b)=>a['D-Day'].localeCompare(b['D-Day']));
+  const ws=XLSX.utils.json_to_sheet(rows);
+  ws['!cols']=[{wch:14},{wch:14},{wch:28},{wch:10},{wch:14},{wch:8},{wch:10}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Expiry');
+  XLSX.writeFile(wb,'Expiry_'+today+'.xlsx');
+}
+
+
+function switchViewerInvTab(tab, el){
+  window._viewerInvTab=tab;
+  document.querySelectorAll('#v-inv-tab-active,#v-inv-tab-zero').forEach(b=>{
+    b.style.background='transparent'; b.style.color='var(--text2)';
+  });
+  el.style.background='var(--text)'; el.style.color='#fff';
+  renderInventory();
+  applyLang();
+}
+
+function supTypeBadge(supType){
+  const lbl = supType==='local' ? L('sup_local')||'🏠 로컬' : L('sup_import')||'🌐 수입';
+  return supType==='local'
+    ?`<span class="badge b-green" style="font-size:10px">${lbl}</span>`
+    :`<span class="badge b-blue" style="font-size:10px">${lbl}</span>`;
+}
+
+function renderInbound(){
+  const q=(document.getElementById('ib-q')?.value||'').toLowerCase();
+  const tf=document.getElementById('ib-type-f')?.value||'';
+  const df=document.getElementById('ib-date-from')?.value||'';
+  const dt=document.getElementById('ib-date-to')?.value||'';
+  let slips=[...(DB.slips_in||[])].reverse().slice(0,200);
+  slips=slips.filter(s=>{
+    const sup=(DB.suppliers||[]).find(x=>x.id===s.supplierId);
+    if(q&&!(sup?sup.name:'').toLowerCase().includes(q)) return false;
+    if(tf&&(sup?.supType||'import')!==tf) return false;
+    if(df&&s.date<df) return false;
+    if(dt&&s.date>dt) return false;
+    return true;
+  });
+  document.getElementById('ib-table').innerHTML=slips.length?slips.map(s=>{
+    const sup=(DB.suppliers||[]).find(x=>x.id===s.supplierId);
+    return `<tr style="cursor:pointer" onclick="openSlipDetail('in','${s.id}')" title="클릭하여 상세 보기">
+      <td style="font-family:var(--mono);font-size:11px">${s.id}</td>
+      <td class="num" style="font-size:11px">${s.date}</td>
+      <td><span class="badge b-in">↓</span> ${sup?sup.name:'—'}</td>
+      <td>${sup?supTypeBadge(sup.supType):''}</td>
+      <td class="num">${s.lines.length}</td>
+      <td class="num"><strong style="color:var(--accent)">${s.lines.reduce((a,l)=>a+l.qty,0).toLocaleString()}</strong></td>
+      <td style="font-size:11px;color:var(--text3)">🔍</td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="7"><div class="empty"><div class="empty-ico">📋</div>${L('no_alerts')}</div></td></tr>`;
+}
+
+function renderOutbound(){
+  const q=(document.getElementById('ob-q')?.value||'').toLowerCase();
+  const df=document.getElementById('ob-date-from')?.value||'';
+  const dt=document.getElementById('ob-date-to')?.value||'';
+  let slips=[...(DB.slips_out||[])].reverse().slice(0,200);
+  slips=slips.filter(s=>{
+    const cus=(DB.customers||[]).find(x=>x.id===s.customerId);
+    if(q&&!(cus?cus.name:'').toLowerCase().includes(q)) return false;
+    if(df&&s.date<df) return false;
+    if(dt&&s.date>dt) return false;
+    return true;
+  });
+  document.getElementById('ob-table').innerHTML=slips.length?slips.map(s=>{
+    const cus=(DB.customers||[]).find(x=>x.id===s.customerId);
+    return `<tr style="cursor:pointer" onclick="openSlipDetail('out','${s.id}')" title="클릭하여 상세 보기">
+      <td style="font-family:var(--mono);font-size:11px">${s.id}</td>
+      <td class="num" style="font-size:11px">${s.date}</td>
+      <td><span class="badge b-out">↑</span> ${cus?cus.name:'—'}</td>
+      <td class="num">${s.lines.length}</td>
+      <td class="num"><strong style="color:var(--orange)">${s.lines.reduce((a,l)=>a+l.qty,0).toLocaleString()}</strong></td>
+      <td style="font-size:11px;color:var(--text3)">🔍</td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="6"><div class="empty"><div class="empty-ico">📋</div>${L('no_alerts')}</div></td></tr>`;
+}
+
+function openSlipDetail(type, id){
+  const slip = type==='in'
+    ? (DB.slips_in||[]).find(s=>s.id===id)
+    : (DB.slips_out||[]).find(s=>s.id===id);
+  if(!slip) return;
+  const isIn = type==='in';
+  const partner = isIn
+    ? (DB.suppliers||[]).find(x=>x.id===slip.supplierId)
+    : (DB.customers||[]).find(x=>x.id===slip.customerId);
+  const totalQty = slip.lines.reduce((a,l)=>a+l.qty,0);
+  const color = isIn ? 'var(--accent)' : 'var(--orange)';
+  const badge = isIn ? '<span class="badge b-in">↓ 입고</span>' : '<span class="badge b-out">↑ 출고</span>';
+
+  const rows = slip.lines.map((l,i)=>{
+    const item = (DB.items||[]).find(x=>x.id===l.itemId);
+    const dl = Math.ceil((new Date(l.expiry)-new Date(TODAY()))/86400000);
+    const dCls = dl<=0?'color:var(--red)':dl<=30?'color:var(--orange)':'color:var(--text2)';
+    const dLbl = dl<=0?'만료':'D-'+dl;
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:8px 10px;color:var(--text3);font-size:11px">${i+1}</td>
+      <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--text3)">${l.barcode||'—'}</td>
+      <td style="padding:8px 10px"><div style="font-weight:600;font-size:12px;word-break:break-word;white-space:normal">${item?item.name:l.itemId}</div><div style="font-size:10px;color:var(--text3)">${item?item.brand:''}</div></td>
+      <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;${dCls}">${fD(l.expiry)}<br><span style="font-size:10px">${dLbl}</span></td>
+      <td style="padding:8px 10px;text-align:right;font-family:var(--mono);font-weight:700;font-size:13px;color:${color}">${l.qty.toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('slip-detail-modal').innerHTML=`
+    <div onclick="this.parentNode.style.display='none'" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)">
+      <div onclick="event.stopPropagation()" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;width:820px;max-width:96vw;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.15)">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:10px">
+            ${badge}
+            <div>
+              <div style="font-size:14px;font-weight:700;font-family:var(--mono)">${slip.id}</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">${slip.date} · ${partner?partner.name:'—'}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="text-align:right">
+              <div style="font-size:10px;color:var(--text3)">총 수량</div>
+              <div style="font-size:18px;font-weight:800;font-family:var(--mono);color:${color}">${totalQty.toLocaleString()} <span style="font-size:11px">ctn</span></div>
+            </div>
+            <button onclick="document.getElementById('slip-detail-modal').innerHTML=''" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3);padding:4px 8px;border-radius:6px">✕</button>
+          </div>
+        </div>
+        <div style="overflow-y:auto;flex:1">
+          <table style="width:100%;border-collapse:collapse;table-layout:fixed">
+            <colgroup>
+              <col style="width:36px">
+              <col style="width:130px">
+              <col style="width:auto">
+              <col style="width:130px">
+              <col style="width:90px">
+            </colgroup>
+            <thead>
+              <tr style="background:var(--surface2)">
+                <th style="padding:8px 10px;font-size:10px;color:var(--text3);text-align:left;font-weight:700">#</th>
+                <th style="padding:8px 10px;font-size:10px;color:var(--text3);text-align:left;font-weight:700">바코드</th>
+                <th style="padding:8px 10px;font-size:10px;color:var(--text3);text-align:left;font-weight:700">제품명</th>
+                <th style="padding:8px 10px;font-size:10px;color:var(--text3);text-align:left;font-weight:700">유통기한</th>
+                <th style="padding:8px 10px;font-size:10px;color:var(--text3);text-align:right;font-weight:700">수량(ctn)</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+        <div style="padding:10px 20px;border-top:1px solid var(--border);background:var(--surface2);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:11px;color:var(--text3)">${slip.lines.length}개 품목</span>
+          <button onclick="document.getElementById('slip-detail-modal').innerHTML=''" style="background:var(--text);color:#fff;border:none;border-radius:6px;padding:7px 18px;cursor:pointer;font-size:12px;font-weight:600">닫기</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('slip-detail-modal').style.display='block';
+}
+
+function renderExpiry(){
+  const stock=calcStock(),today=TODAY();
+  const d90=new Date();d90.setDate(d90.getDate()+90);
+  let rows=[];
+  (DB.items||[]).filter(i=>i.active!==false).forEach(i=>{
+    Object.entries(stock[i.id]||{}).filter(([e,q])=>q>0&&new Date(e)<=d90).forEach(([e,q])=>{
+      const dl=Math.ceil((new Date(e)-new Date(today))/86400000);
+      rows.push({item:i,expiry:e,qty:q,dl});
+    });
+  });
+  rows.sort((a,b)=>a.dl-b.dl);
+  document.getElementById('exp-table').innerHTML=rows.length?rows.map(r=>{
+    const cls=r.dl<=0?'exp-danger':r.dl<=30?'exp-warn':'exp-90';
+    const lbl=r.dl<=0?L('expired'):'D-'+r.dl;
+    return `<tr>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text3)">${r.item.barcode||'—'}</td>
+      <td style="font-size:11px;color:var(--text2)">${r.item.brand}</td>
+      <td class="left" style="font-weight:600">${r.item.name}</td>
+      <td><span class="badge ${tbadge(r.item.type)}">${tico(r.item.type)} ${tname(r.item.type)}</span></td>
+      <td class="num ${cls}" style="font-size:11px">${r.expiry}</td>
+      <td class="num ${cls}">${lbl}</td>
+      <td class="num"><strong>${r.qty.toLocaleString()}</strong></td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="7"><div class="empty"><div class="empty-ico">✅</div>${L('no_alerts')}</div></td></tr>`;
+}
+
+// Init
+try{ const s=localStorage.getItem('fwms2_viewer_lang'); if(s){ LANG=s; document.getElementById('html-root').lang=s==='id'?'id':'ko'; } }catch(e){}
+applyLang();
+loadData();
+setInterval(loadData,5*60*1000);
+</script>
+<div id="slip-detail-modal" style="display:none"></div>
+</body>
+</html>
