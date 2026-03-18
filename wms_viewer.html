@@ -20,22 +20,33 @@
   --font:'Noto Sans KR',sans-serif;--mono:'JetBrains Mono',monospace;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;}
-.topbar{background:var(--text);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
-.tlogo{display:flex;align-items:center;gap:10px;}
-.tlogo-ico{font-size:22px;}
-.tlogo-name{font-size:15px;font-weight:700;color:#fff;}
-.tlogo-sub{font-size:9px;color:#6a6560;font-family:var(--mono);letter-spacing:1px;}
-.topright{display:flex;align-items:center;gap:12px;}
-.ro-badge{background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;}
-.updated{font-size:10px;color:#6a6560;font-family:var(--mono);}
-.lang-btn{background:rgba(255,255,255,.12);border:none;color:#ccc;font-family:var(--font);font-size:11px;padding:5px 10px;border-radius:6px;cursor:pointer;}
-.lang-btn:hover{background:rgba(255,255,255,.2);}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;height:100vh;display:flex;overflow:hidden;}
 
-.layout{display:flex;min-height:calc(100vh - 50px);}
-/* Dashboard sidebar */
-.dash-sidebar{width:260px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:12px;}
-.main-area{flex:1;padding:16px;overflow:auto;}
+/* ── Sidebar ── */
+.sidebar{width:200px;min-width:200px;background:var(--text);color:#e8e4de;display:flex;flex-direction:column;height:100vh;}
+.logo{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+.logo-mark{font-size:20px;margin-bottom:3px;}
+.logo-title{font-size:14px;font-weight:700;color:#fff;}
+.logo-sub{font-size:9px;color:#6a6560;margin-top:2px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;}
+.nav{padding:10px 0;flex:1;overflow-y:auto;}
+.nav-label{padding:8px 18px 3px;font-size:9px;font-weight:700;color:#5a5550;letter-spacing:2px;text-transform:uppercase;}
+.ni{display:flex;align-items:center;gap:9px;padding:8px 18px;cursor:pointer;color:#a0988e;transition:all .15s;font-size:12px;border-left:3px solid transparent;}
+.ni:hover{color:#fff;background:rgba(255,255,255,.05);}
+.ni.active{color:#fff;border-left-color:var(--accent);background:rgba(45,106,79,.15);}
+.ni span:first-child{font-size:13px;width:15px;text-align:center;}
+.sb-foot{padding:14px 18px;border-top:1px solid rgba(255,255,255,.08);}
+.pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-right:6px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.sys-txt{font-size:10px;color:#5a5550;}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:54px;min-height:54px;}
+.ptitle{font-size:16px;font-weight:700;letter-spacing:-.3px;}
+.psub{font-size:11px;color:var(--text3);margin-top:1px;}
+.content{flex:1;overflow-y:auto;padding:20px 24px;}
+
+.layout{display:flex;height:100vh;overflow:hidden;}
 
 /* Stats */
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;}
@@ -120,23 +131,6 @@ tr:hover td{background:var(--bg);}
 </head>
 <body>
 
-<div class="topbar">
-  <div class="tlogo">
-    <div class="tlogo-ico" id="v-logo">🥡</div>
-    <div>
-      <div class="tlogo-name" id="v-company-name">식품 WMS</div>
-      <div class="tlogo-sub" id="v-title-sub" id="v-title-sub">재고 현황 뷰어</div>
-    </div>
-  </div>
-  <div class="topright">
-    <button class="lang-btn" id="lang-btn" onclick="toggleLang()">🌐 한국어</button>
-    <button class="lang-btn" onclick="openViewerSettings()" title="연결 설정">⚙️ 설정</button>
-    <button id="v-refresh-btn" class="lang-btn" onclick="loadData()" title="새로고침">⟳ 새로고침</button>
-    <span class="updated" id="last-updated">—</span>
-    <span class="ro-badge" id="v-readonly">👁 읽기 전용</span>
-  </div>
-</div>
-
 <!-- Viewer Settings Modal -->
 <div id="m-vsettings" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center">
   <div style="background:#fff;border-radius:14px;padding:24px;width:420px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.3)">
@@ -147,12 +141,12 @@ tr:hover td{background:var(--bg);}
     <div style="display:flex;flex-direction:column;gap:12px">
       <div>
         <label style="font-size:11px;font-weight:600;color:#666;display:block;margin-bottom:5px" data-vl="gas_url">Apps Script 웹앱 URL <span style="color:#e53935">*</span></label>
-        <input id="vs-url" type="text" placeholder="https://script.google.com/macros/s/..." 
+        <input id="vs-url" type="text" placeholder="https://script.google.com/macros/s/..."
           style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:8px;padding:9px 12px;font-size:12px;font-family:monospace;outline:none">
       </div>
       <div>
         <label style="font-size:11px;font-weight:600;color:#666;display:block;margin-bottom:5px" data-vl="secret_key">비밀키</label>
-        <input id="vs-key" type="text" placeholder="WMS2025!" 
+        <input id="vs-key" type="text" placeholder="WMS2025!"
           style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:8px;padding:9px 12px;font-size:12px;outline:none">
       </div>
       <div id="vs-test-result" style="font-size:12px;min-height:18px"></div>
@@ -165,93 +159,130 @@ tr:hover td{background:var(--bg);}
   </div>
 </div>
 
-<div id="loading" class="loading">
-  <div><div class="loader"></div><div style="font-size:13px">불러오는 중...</div></div>
+<div id="loading" class="loading" style="height:100vh;display:flex;align-items:center;justify-content:center">
+  <div><div class="loader"></div><div style="font-size:13px;margin-top:8px" id="loading-msg">불러오는 중...</div><div style="font-size:11px;color:var(--text3);margin-top:4px">처음 로딩은 최대 30초 걸릴 수 있어요</div></div>
 </div>
-<div id="error-box" class="error-box" style="display:none"></div>
+<div id="error-box" class="error-box" style="display:none;margin:20px"></div>
 
+<!-- ══ SIDEBAR + MAIN ══ -->
 <div class="layout" id="main-layout" style="display:none">
-  <!-- Left dashboard sidebar -->
-  <div class="dash-sidebar">
-    <div>
-      <div class="section-t" id="v-total-stock-lbl" id="v-total-stock-lbl">총 재고</div>
-      <div style="font-size:36px;font-weight:900;font-family:var(--mono);color:var(--accent)" id="v-total">0</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:2px" id="v-summary">—</div>
-    </div>
-    <div class="stats2">
-      <div class="stat-card" style="--c:#2563eb">
-        <div class="stat-lbl" id="v-items-lbl">품목</div>
-        <div class="stat-val" id="v-items">0</div>
-        <div class="stat-desc" id="v-items-desc" id="v-items-desc">아이템</div>
-      </div>
-      <div class="stat-card" style="--c:var(--red)">
-        <div class="stat-lbl" id="v-exp-lbl">유통기한</div>
-        <div class="stat-val" id="v-exp">0</div>
-        <div class="stat-desc" id="v-exp-desc" id="v-exp-desc">90일 이내</div>
-      </div>
-    </div>
 
-    <!-- Type breakdown -->
-    <div>
-      <div class="section-t" id="v-type-ratio-lbl" id="v-type-ratio-lbl">타입별 재고</div>
-      <div class="type-row">
-        <span style="width:20px">❄️</span>
-        <div class="type-bar-bg"><div class="type-bar" id="bar-frozen" style="background:#2563eb;width:0%"></div></div>
-        <span style="font-size:11px;font-family:var(--mono);color:var(--text2);min-width:52px;text-align:right" id="v-frozen-qty">0</span>
-      </div>
-      <div class="type-row">
-        <span style="width:20px">🧊</span>
-        <div class="type-bar-bg"><div class="type-bar" id="bar-chilled" style="background:#0891b2;width:0%"></div></div>
-        <span style="font-size:11px;font-family:var(--mono);color:var(--text2);min-width:52px;text-align:right" id="v-chilled-qty">0</span>
-      </div>
-      <div class="type-row">
-        <span style="width:20px">📦</span>
-        <div class="type-bar-bg"><div class="type-bar" id="bar-dry" style="background:#78716c;width:0%"></div></div>
-        <span style="font-size:11px;font-family:var(--mono);color:var(--text2);min-width:52px;text-align:right" id="v-dry-qty">0</span>
-      </div>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-mark" id="v-logo">🥡</div>
+      <div class="logo-title" id="v-company-name">식품 WMS</div>
+      <div class="logo-sub" id="v-title-sub">STOCK VIEWER</div>
     </div>
-
-    <!-- Today activity -->
-    <div>
-      <div class="section-t" id="v-today-lbl" id="v-today-lbl">오늘 입출고</div>
-      <div class="today-row">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="today-badge t-in">↓</div>
-          <div>
-            <div style="font-size:10px;color:var(--text3)" id="v-today-in-lbl">입고</div>
-            <div style="font-size:11px;font-weight:600;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="v-today-in-name">—</div>
-          </div>
-        </div>
-        <div style="font-size:20px;font-weight:800;font-family:var(--mono);color:var(--accent)" id="v-today-in-val">0<span style="font-size:10px;color:var(--text3);font-weight:400"> ctn</span></div>
-      </div>
-      <div class="today-row">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="today-badge t-out">↑</div>
-          <div>
-            <div style="font-size:10px;color:var(--text3)" id="v-today-out-lbl">출고</div>
-            <div style="font-size:11px;font-weight:600;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="v-today-out-name">—</div>
-          </div>
-        </div>
-        <div style="font-size:20px;font-weight:800;font-family:var(--mono);color:var(--orange)" id="v-today-out-val">0<span style="font-size:10px;color:var(--text3);font-weight:400"> ctn</span></div>
-      </div>
-    </div>
-
-    <!-- Alerts -->
-    <div style="flex:1;overflow:hidden;display:flex;flex-direction:column">
-      <div class="section-t" id="v-alerts-lbl">유통기한 주의</div>
-      <div style="overflow-y:auto;flex:1" id="v-alert-list">
-        <div class="no-alert" id="v-no-alerts">✅ 없음</div>
-      </div>
+    <nav class="nav">
+      <div class="nav-label" id="vn-status">현황</div>
+      <div class="ni active" id="ni-dashboard" onclick="showTab('dashboard',this)"><span>▦</span><span id="vni-dashboard">대시보드</span></div>
+      <div class="nav-label" id="vn-stock">재고</div>
+      <div class="ni" id="ni-inventory" onclick="showTab('inventory',this)"><span>≡</span><span id="vni-inventory">재고 현황</span></div>
+      <div class="nav-label" id="vn-history">이력</div>
+      <div class="ni" id="ni-inbound" onclick="showTab('inbound',this)"><span>↓</span><span id="vni-inbound">입고 이력</span></div>
+      <div class="ni" id="ni-outbound" onclick="showTab('outbound',this)"><span>↑</span><span id="vni-outbound">출고 이력</span></div>
+      <div class="nav-label" id="vn-expiry">유통기한</div>
+      <div class="ni" id="ni-expiry" onclick="showTab('expiry',this)"><span>⚠</span><span id="vni-expiry">유통기한 주의</span></div>
+    </nav>
+    <div class="sb-foot">
+      <span class="pulse"></span>
+      <span class="sys-txt">👁 읽기 전용</span>
     </div>
   </div>
 
-  <!-- Main tabs area -->
-  <div class="main-area">
-    <div class="tabs">
-      <button class="tab active" onclick="showTab('inventory',this)" id="tab-btn-inventory" id="tab-btn-inventory">📦 재고 현황</button>
-      <button class="tab" onclick="showTab('inbound',this)" id="tab-btn-inbound" id="tab-btn-inbound">↓ 입고</button>
-      <button class="tab" onclick="showTab('outbound',this)" id="tab-btn-outbound" id="tab-btn-outbound">↑ 출고</button>
-      <button class="tab" onclick="showTab('expiry',this)" id="tab-btn-expiry" id="tab-btn-expiry">⚠️ 유통기한</button>
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="ptitle" id="v-page-title">대시보드</div>
+        <div class="psub" id="v-page-sub">재고 현황 뷰어</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="lang-btn" id="lang-btn" onclick="toggleLang()">🌐 한국어</button>
+        <button class="lang-btn" onclick="openViewerSettings()">⚙️ 설정</button>
+        <button id="v-refresh-btn" class="lang-btn" onclick="loadData()">⟳ 새로고침</button>
+        <span class="updated" id="last-updated">—</span>
+      </div>
+    </div>
+    <div class="content">
+
+    <!-- Dashboard -->
+    <div class="panel active" id="panel-dashboard">
+      <!-- 4개 통계 카드 -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+        <div class="stat-card" style="--c:#2563eb">
+          <div class="stat-lbl" id="d-items-lbl">등록 품목</div>
+          <div class="stat-val" id="d-items-val">0</div>
+          <div class="stat-desc" id="d-items-desc">아이템 수</div>
+        </div>
+        <div class="stat-card" style="--c:var(--accent)">
+          <div class="stat-lbl" id="d-total-lbl">총 재고(ctn)</div>
+          <div class="stat-val" id="d-total-val">0</div>
+          <div class="stat-desc">ctn</div>
+        </div>
+        <div class="stat-card" style="--c:var(--orange)">
+          <div class="stat-lbl" id="d-today-in-lbl">오늘 입고(ctn)</div>
+          <div class="stat-val" id="d-today-in-val">0</div>
+          <div class="stat-desc" id="d-today-in-name">—</div>
+        </div>
+        <div class="stat-card" style="--c:var(--red)">
+          <div class="stat-lbl" id="d-exp-lbl">유통기한 임박</div>
+          <div style="display:flex;align-items:baseline;gap:10px;margin:4px 0 2px">
+            <div>
+              <div style="font-size:24px;font-weight:800;font-family:var(--mono);color:var(--red)" id="d-exp30">0</div>
+              <div style="font-size:10px;color:var(--red)" id="d-d30-lbl">30일 이내</div>
+            </div>
+            <div style="color:var(--border);font-size:16px">/</div>
+            <div>
+              <div style="font-size:20px;font-weight:800;font-family:var(--mono);color:var(--orange)" id="d-exp90">0</div>
+              <div style="font-size:10px;color:var(--orange)" id="d-d90-lbl">90일 이내</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 타입별 재고 + 장기 미입출고 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div class="card" id="v-type-box"></div>
+        <div class="card" id="v-dormant-card">
+          <div class="card-head">
+            <div class="card-title" id="v-dormant-title">😴 3개월 미입출고</div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:center;padding:12px 16px">
+            <div style="min-width:70px">
+              <div id="v-dormant-cnt" style="font-size:32px;font-weight:800;font-family:var(--mono);color:var(--text)">0</div>
+              <div style="font-size:11px;color:var(--text3)" id="v-dormant-unit">품목</div>
+            </div>
+            <div style="flex:1;border-left:1px solid var(--border);padding-left:20px">
+              <div id="v-dormant-qty" style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--text2)">0</div>
+              <div style="font-size:11px;color:var(--text3)" id="v-dormant-stock">총 재고(ctn)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 최근 입출고 + 유통기한 임박 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="card">
+          <div class="card-head"><div class="card-title" id="v-recent-title">최근 입출고</div></div>
+          <table>
+            <thead><tr>
+              <th id="th-rec-type">구분</th><th id="th-rec-name">제품명</th>
+              <th id="th-rec-qty">수량</th><th id="th-rec-date">일자</th>
+            </tr></thead>
+            <tbody id="v-recent-table"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title" id="v-exp-title2">유통기한 임박</div></div>
+          <table>
+            <thead><tr>
+              <th id="th-exp2-name">제품명</th><th id="th-exp2-type">타입</th>
+              <th id="th-exp2-exp">유통기한</th><th>D-day</th><th id="th-exp2-qty">수량</th>
+            </tr></thead>
+            <tbody id="v-expiry-table"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- Inventory -->
@@ -371,12 +402,14 @@ tr:hover td{background:var(--bg);}
         </table>
       </div>
     </div>
-  </div>
-</div>
+
+    </div><!-- /.content -->
+  </div><!-- /.main -->
+</div><!-- /.layout -->
 
 <script>
 // GAS URL: localStorage에서 읽음 (⚙️ 설정 버튼으로 변경 가능)
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbyGQ3hb7B9uIDWiyrJawcpI5w8qErb0NyJ77xSbjvi9zhywmqLTnDw1KOwMDG7JHeK2/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbyiXxHldpFitcVS1nue-lFaudopw1uvMqfR8pYi1P0ziHd2kNZdeJhlw5DRc4F0qLNg/exec';
 var GAS_KEY = 'WMS2025!';
 (function(){
   try{
@@ -489,18 +522,6 @@ function applyLang(){
   const settingsBtn=document.getElementById('v-settings-btn');
   if(settingsBtn) settingsBtn.textContent='⚙️ '+(LANG==='ko'?'설정':'Pengaturan');
 
-  // 사이드바 라벨
-  T('v-total-stock-lbl',L('total_stock'));
-  T('v-items-lbl',L('items_count'));
-  T('v-items-desc',L('items_unit'));
-  T('v-exp-lbl',L('expiry_warn'));
-  T('v-exp-desc',L('expiry_90'));
-  T('v-type-ratio-lbl',L('type_ratio'));
-  T('v-today-lbl',L('today_activity'));
-  T('v-today-in-lbl',L('today_in'));
-  T('v-today-out-lbl',L('today_out'));
-  T('v-alerts-lbl',L('expiry_alerts'));
-
   // 메인 탭 버튼
   T('tab-btn-inventory','📦 '+L('inventory'));
   T('tab-btn-inbound','↓ '+L('inbound'));
@@ -546,34 +567,89 @@ function applyLang(){
     ibTypeF.options[2].text=L('sup_local');
   }
 
+  // 사이드바 nav 라벨
+  const T2=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  T2('vn-status',   LANG==='id'?'STATUS':'현황');
+  T2('vn-stock',    LANG==='id'?'STOK':'재고');
+  T2('vn-history',  LANG==='id'?'RIWAYAT':'이력');
+  T2('vn-expiry',   LANG==='id'?'KADALUARSA':'유통기한');
+  T2('vni-dashboard', LANG==='id'?'Dasbor':'대시보드');
+  T2('vni-inventory', LANG==='id'?'Stok Barang':'재고 현황');
+  T2('vni-inbound',   LANG==='id'?'Riwayat Masuk':'입고 이력');
+  T2('vni-outbound',  LANG==='id'?'Riwayat Keluar':'출고 이력');
+  T2('vni-expiry',    LANG==='id'?'Kadaluarsa':'유통기한 주의');
+  T2('d-items-lbl',L('items_count'));
+  T2('d-items-desc',L('items_unit'));
+  T2('d-total-lbl',L('total_stock'));
+  T2('d-today-in-lbl',L('today_in'));
+  T2('d-exp-lbl',L('expiry_warn'));
+  T2('d-d30-lbl',L('d30_within'));
+  T2('d-d90-lbl',L('d90_within'));
+  T2('v-dormant-title','😴 '+(LANG==='id'?'3 Bulan Tidak Bergerak':'3개월 미입출고'));
+  T2('v-dormant-unit',LANG==='id'?'produk':'품목');
+  T2('v-dormant-stock',L('total_stock'));
+  T2('v-recent-title',LANG==='id'?'Transaksi Terbaru':'최근 입출고');
+  T2('v-exp-title2',L('expiry_warn'));
+  // 최근 입출고 테이블 헤더
+  T2('th-rec-type',L('type'));
+  T2('th-rec-name',L('product_name'));
+  T2('th-rec-qty',L('qty'));
+  T2('th-rec-date',L('date'));
+  // 유통기한 임박 테이블 헤더
+  T2('th-exp2-name',L('product_name'));
+  T2('th-exp2-type',L('type'));
+  T2('th-exp2-exp',L('expiry'));
+  T2('th-exp2-qty',L('qty'));
+
   // 설정 모달
   Q('.settings-title','☁️ '+(LANG==='ko'?'연결 설정':'Pengaturan Koneksi'));
 }
 
+const PAGE_TITLES={
+  dashboard:{ko:'대시보드',id:'Dasbor'},
+  inventory:{ko:'재고 현황',id:'Stok Barang'},
+  inbound:{ko:'입고 이력',id:'Riwayat Masuk'},
+  outbound:{ko:'출고 이력',id:'Riwayat Keluar'},
+  expiry:{ko:'유통기한 주의',id:'Peringatan Kadaluarsa'},
+};
+
 function showTab(name,el){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
-  el.classList.add('active');
+  if(el) el.classList.add('active');
+  else { const ni=document.getElementById('ni-'+name); if(ni) ni.classList.add('active'); }
+  const titles=PAGE_TITLES[name]||{ko:name,id:name};
+  const T2=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  T2('v-page-title',LANG==='id'?titles.id:titles.ko);
 }
 
 async function gasFetch(url){
-  try{
-    const res=await fetch(url,{method:'GET',redirect:'follow'});
-    const text=await res.text();
-    return JSON.parse(text.trim().replace(/^[^(]*\(/,'').replace(/\);?\s*$/,''));
-  }catch(e){
-    return new Promise((resolve,reject)=>{
-      const cb='_wms_'+Date.now();
-      const sc=document.createElement('script');
-      const tm=setTimeout(()=>{cleanup();reject(new Error('연결 시간 초과'));},12000);
-      function cleanup(){clearTimeout(tm);delete window[cb];sc.parentNode&&sc.parentNode.removeChild(sc);}
-      window[cb]=d=>{cleanup();resolve(d);};
-      sc.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
-      sc.onerror=()=>{cleanup();reject(new Error('로드 실패'));};
-      document.head.appendChild(sc);
-    });
-  }
+  // JSONP 방식 우선 사용 (CORS 우회)
+  return new Promise((resolve,reject)=>{
+    const cb='_wms_'+Date.now();
+    const sc=document.createElement('script');
+    const tm=setTimeout(()=>{
+      cleanup();
+      // JSONP 실패 시 fetch로 재시도
+      fetch(url,{method:'GET',redirect:'follow'})
+        .then(r=>r.text())
+        .then(t=>resolve(JSON.parse(t.trim().replace(/^[^(]*\(/,'').replace(/\);?\s*$/,''))))
+        .catch(()=>reject(new Error('연결 시간 초과 — GAS URL과 배포 설정을 확인하세요')));
+    },30000);
+    function cleanup(){
+      clearTimeout(tm);
+      delete window[cb];
+      if(sc.parentNode) sc.parentNode.removeChild(sc);
+    }
+    window[cb]=d=>{cleanup();resolve(d);};
+    sc.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
+    sc.onerror=()=>{
+      cleanup();
+      reject(new Error('스크립트 로드 실패 — GAS 배포 설정을 확인하세요'));
+    };
+    document.head.appendChild(sc);
+  });
 }
 
 async function loadData(){
@@ -685,70 +761,129 @@ function renderDashboard(){
       if(dl<=0)expired++; else if(dl<=30)exp30++; else if(dl<=90)exp90++;
     });
   });
-  document.getElementById('v-total').textContent=total.toLocaleString();
-  document.getElementById('v-items').textContent=(DB.items||[]).length;
-  document.getElementById('v-exp').textContent=expired+exp30+exp90;
-  document.getElementById('v-summary').textContent=`${L('items_count')} ${(DB.items||[]).length}개 · ${L('expired')} ${expired}건 · D-30 ${exp30}건`;
 
+  // ── 사이드바 제거됨 — 대시보드 탭 카드만 업데이트 ──
   const mx=Math.max(frozen,chilled,dry,1);
-  document.getElementById('bar-frozen').style.width=(frozen/mx*100)+'%';
-  document.getElementById('bar-chilled').style.width=(chilled/mx*100)+'%';
-  document.getElementById('bar-dry').style.width=(dry/mx*100)+'%';
-  document.getElementById('v-frozen-qty').textContent=frozen.toLocaleString()+' ctn';
-  document.getElementById('v-chilled-qty').textContent=chilled.toLocaleString()+' ctn';
-  document.getElementById('v-dry-qty').textContent=dry.toLocaleString()+' ctn';
-
   const todayIn=(DB.slips_in||[]).filter(s=>s.date===today);
   const todayOut=(DB.slips_out||[]).filter(s=>s.date===today);
   const inQty=todayIn.reduce((a,s)=>a+s.lines.reduce((b,l)=>b+l.qty,0),0);
   const outQty=todayOut.reduce((a,s)=>a+s.lines.reduce((b,l)=>b+l.qty,0),0);
-  document.getElementById('v-today-in-val').innerHTML=inQty.toLocaleString()+'<span style="font-size:10px;color:var(--text3);font-weight:400"> ctn</span>';
-  document.getElementById('v-today-out-val').innerHTML=outQty.toLocaleString()+'<span style="font-size:10px;color:var(--text3);font-weight:400"> ctn</span>';
-  if(todayIn.length){
-    const names=[...new Set(todayIn.map(s=>(DB.suppliers||[]).find(x=>x.id===s.supplierId)?.name||'—'))];
-    document.getElementById('v-today-in-name').textContent=names.slice(0,2).join(', ')+(names.length>2?' 외 '+(names.length-2):'');
-  } else document.getElementById('v-today-in-name').textContent='—';
-  if(todayOut.length){
-    const names=[...new Set(todayOut.map(s=>(DB.customers||[]).find(x=>x.id===s.customerId)?.name||'—'))];
-    document.getElementById('v-today-out-name').textContent=names.slice(0,2).join(', ')+(names.length>2?' 외 '+(names.length-2):'');
-  } else document.getElementById('v-today-out-name').textContent='—';
 
-  // Alerts D-90
-  const d90=new Date();d90.setDate(d90.getDate()+90);
-  let alerts=[];
+  // ── 대시보드 탭 카드 ──
+  const dItems=document.getElementById('d-items-val');
+  const dTotal=document.getElementById('d-total-val');
+  const dIn=document.getElementById('d-today-in-val');
+  const dInN=document.getElementById('d-today-in-name');
+  const dExp30=document.getElementById('d-exp30');
+  const dExp90=document.getElementById('d-exp90');
+  if(dItems) dItems.textContent=(DB.items||[]).length;
+  if(dTotal) dTotal.textContent=total.toLocaleString();
+  if(dIn) dIn.textContent=inQty.toLocaleString();
+  if(dInN){
+    if(todayIn.length){
+      const names=[...new Set(todayIn.map(s=>(DB.suppliers||[]).find(x=>x.id===s.supplierId)?.name||'—'))];
+      dInN.textContent=names.slice(0,2).join(', ')+(names.length>2?(LANG==='id'?' +lainnya '+(names.length-2):' 외 '+(names.length-2)+'곳'):'');
+    } else dInN.textContent=LANG==='id'?'Tidak ada masuk':'입고 없음';
+  }
+  if(dExp30) dExp30.textContent=expired+exp30;
+  if(dExp90) dExp90.textContent=exp90;
+
+  // 라벨 언어 처리
+  const T2=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  T2('d-items-lbl',L('items_count'));
+  T2('d-items-desc',L('items_unit'));
+  T2('d-total-lbl',L('total_stock'));
+  T2('d-today-in-lbl',L('today_in'));
+  T2('d-exp-lbl',L('expiry_warn'));
+  T2('d-d30-lbl',L('d30_within'));
+  T2('d-d90-lbl',L('d90_within'));
+  T2('v-dormant-title','😴 '+(LANG==='id'?'3 Bulan Tidak Bergerak':'3개월 미입출고'));
+  T2('v-dormant-unit',LANG==='id'?'produk':'품목');
+  T2('v-dormant-stock',L('total_stock'));
+  T2('v-recent-title',LANG==='id'?'Transaksi Terbaru':'최근 입출고');
+  T2('v-exp-title2',L('expiry_warn'));
+
+  // 타입별 재고 카드
+  const typeBox=document.getElementById('v-type-box');
+  if(typeBox){
+    typeBox.innerHTML=`
+      <div class="card-head"><div class="card-title" id="v-type-ratio-lbl">${L('type_ratio')}</div></div>
+      <div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="width:22px">❄️</span>
+          <div style="flex:1;height:8px;background:var(--border);border-radius:4px"><div style="height:100%;width:${(frozen/Math.max(frozen,chilled,dry,1)*100).toFixed(1)}%;background:var(--frozen);border-radius:4px"></div></div>
+          <span style="font-size:12px;font-family:var(--mono);min-width:70px;text-align:right">${frozen.toLocaleString()} ctn</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="width:22px">🧊</span>
+          <div style="flex:1;height:8px;background:var(--border);border-radius:4px"><div style="height:100%;width:${(chilled/Math.max(frozen,chilled,dry,1)*100).toFixed(1)}%;background:var(--chilled);border-radius:4px"></div></div>
+          <span style="font-size:12px;font-family:var(--mono);min-width:70px;text-align:right">${chilled.toLocaleString()} ctn</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="width:22px">📦</span>
+          <div style="flex:1;height:8px;background:var(--border);border-radius:4px"><div style="height:100%;width:${(dry/Math.max(frozen,chilled,dry,1)*100).toFixed(1)}%;background:var(--dry);border-radius:4px"></div></div>
+          <span style="font-size:12px;font-family:var(--mono);min-width:70px;text-align:right">${dry.toLocaleString()} ctn</span>
+        </div>
+      </div>`;
+  }
+
+  // 장기 미입출고 (3개월)
+  const threeMonthsAgo=new Date();threeMonthsAgo.setMonth(threeMonthsAgo.getMonth()-3);
+  const tma=threeMonthsAgo.toISOString().slice(0,10);
+  const dormant=(DB.items||[]).filter(i=>i.active!==false).filter(item=>{
+    const lastIn=(DB.slips_in||[]).filter(s=>s.lines.some(l=>l.itemId===item.id)).map(s=>s.date).sort().pop()||'';
+    const lastOut=(DB.slips_out||[]).filter(s=>s.lines.some(l=>l.itemId===item.id)).map(s=>s.date).sort().pop()||'';
+    const last=lastIn>lastOut?lastIn:lastOut;
+    const hasStock=Object.values(stock[item.id]||{}).some(q=>q>0);
+    return hasStock&&(!last||last<tma);
+  });
+  const dormantQty=dormant.reduce((s,i)=>s+Object.values(stock[i.id]||{}).reduce((a,q)=>a+(q>0?q:0),0),0);
+  const dcnt=document.getElementById('v-dormant-cnt');
+  const dqty=document.getElementById('v-dormant-qty');
+  if(dcnt) dcnt.textContent=dormant.length;
+  if(dqty) dqty.textContent=dormantQty.toLocaleString();
+
+  // 최근 입출고
+  const recent=[];
+  [...(DB.slips_in||[])].reverse().slice(0,5).forEach(s=>
+    s.lines.forEach(l=>{const it=(DB.items||[]).find(x=>x.id===l.itemId);if(it)recent.push({type:'in',name:it.name,qty:l.qty,date:s.date});})
+  );
+  [...(DB.slips_out||[])].reverse().slice(0,5).forEach(s=>
+    s.lines.forEach(l=>{const it=(DB.items||[]).find(x=>x.id===l.itemId);if(it)recent.push({type:'out',name:it.name,qty:l.qty,date:s.date});})
+  );
+  recent.sort((a,b)=>b.date.localeCompare(a.date));
+  const rt=document.getElementById('v-recent-table');
+  if(rt) rt.innerHTML=recent.slice(0,10).map(r=>`<tr>
+    <td><span class="badge ${r.type==='in'?'b-in':'b-out'}">${r.type==='in'?'↓ '+L('stock_in'):'↑ '+L('stock_out')}</span></td>
+    <td style="font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</td>
+    <td class="num">${r.qty.toLocaleString()}</td>
+    <td class="num" style="font-size:11px">${fD(r.date)}</td>
+  </tr>`).join('')||`<tr><td colspan="4"><div class="empty"><div class="empty-ico">📋</div>${L('no_alerts')}</div></td></tr>`;
+
+  // 유통기한 임박 (30일 이내)
+  const expiryRows=[];
   (DB.items||[]).filter(i=>i.active!==false).forEach(i=>{
-    Object.entries(stock[i.id]||{}).filter(([e,q])=>q>0&&new Date(e)<=d90).forEach(([e,q])=>{
+    Object.entries(stock[i.id]||{}).filter(([e,q])=>q>0).forEach(([e,q])=>{
       const dl=Math.ceil((new Date(e)-new Date(today))/86400000);
-      alerts.push({item:i,expiry:e,qty:q,dl});
+      if(dl<=90) expiryRows.push({item:i,expiry:e,qty:q,dl});
     });
   });
-  const al=document.getElementById('v-alert-list');
-  if(!alerts.length){ al.innerHTML=`<div class="no-alert">✅ ${L('no_alerts')}</div>`; return; }
+  expiryRows.sort((a,b)=>a.dl-b.dl);
+  const et=document.getElementById('v-expiry-table');
+  if(et) et.innerHTML=expiryRows.slice(0,10).map(r=>{
+    const cls=r.dl<=0?'exp-danger':r.dl<=30?'exp-warn':'exp-90';
+    const lbl=r.dl<=0?L('expired'):'D-'+r.dl;
+    return `<tr>
+      <td style="font-size:11px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.item.name}</td>
+      <td><span class="badge ${tbadge(r.item.type)}">${tico(r.item.type)} ${tname(r.item.type)}</span></td>
+      <td class="num ${cls}" style="font-size:11px">${fD(r.expiry)}</td>
+      <td class="num ${cls}">${lbl}</td>
+      <td class="num">${r.qty.toLocaleString()}</td>
+    </tr>`;
+  }).join('')||`<tr><td colspan="5"><div class="empty"><div class="empty-ico">✅</div>${L('no_alerts')}</div></td></tr>`;
 
-  // 30일 이내 / 31~90일 분리
-  const urgent = alerts.filter(a=>a.dl<=30);
-  const warn90 = alerts.filter(a=>a.dl>30 && a.dl<=90);
-
-  const makeItem = a=>{
-    const cls=a.dl<=0?'d0':a.dl<=30?'d30':'d90';
-    const pill=a.dl<=0?L('expired'):'D-'+a.dl;
-    const nm=a.item.name.length>14?a.item.name.slice(0,13)+'…':a.item.name;
-    return `<div class="alert-item ${cls}">
-      <div><div class="alert-name">${nm}</div><div class="alert-meta">${a.item.brand} · ${fD(a.expiry)}</div></div>
-      <div style="text-align:right"><span class="dday-pill ${cls}">${pill}</span><div class="alert-qty">${a.qty} ctn</div></div>
-    </div>`;
-  };
-
-  let html='';
-  if(urgent.length){
-    html+=`<div style="font-size:10px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.6px;padding:6px 2px 3px">⚠️ ${L('d30_within')} (${urgent.length})</div>`;
-    html+=urgent.slice(0,15).map(makeItem).join('');
-  }
-  if(warn90.length){
-    html+=`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;padding:8px 2px 3px">📅 ${L('d90_within')} (${warn90.length})</div>`;
-    html+=warn90.slice(0,10).map(makeItem).join('');
-  }
-  al.innerHTML=html;
+  // Alerts (사이드바)
+  const d90=new Date();d90.setDate(d90.getDate()+90);
 }
 
 function renderInventory(){
