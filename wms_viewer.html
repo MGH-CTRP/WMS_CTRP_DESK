@@ -970,7 +970,10 @@ function exportInventoryExcel(){
   const hExpiry   = L('expiry');
   const hQty      = L('qty');
 
-  (DB.items||[]).forEach(item=>{
+  // 브랜드 오름차순 → 제품명 오름차순 정렬
+  const sortedItems = [...(DB.items||[])].sort((a,b)=>a.brand.localeCompare(b.brand)||a.name.localeCompare(b.name));
+
+  sortedItems.forEach(item=>{
     const exps = Object.entries(stock[item.id]||{})
       .filter(([,q])=>q>0)
       .sort(([a],[b])=>a.localeCompare(b));
